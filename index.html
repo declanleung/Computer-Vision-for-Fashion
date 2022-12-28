@@ -1,0 +1,318 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script class="jsbin" src="./Computer Vision for Fashion_files/jquery.min.js.download"></script>
+		<script class="jsbin" src="./Computer Vision for Fashion_files/jquery-ui.min.js.download"></script>
+
+		<!-- Font Awesome -->
+		<link
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		rel="stylesheet"
+		/>
+		<!-- Google Fonts -->
+		<link
+		href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+		rel="stylesheet"
+		/>
+		<!-- MDB -->
+		<link
+		href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.11.0/mdb.min.css"
+		rel="stylesheet"
+		/>
+
+		<!-- MDB -->
+		<script
+		type="text/javascript"
+		src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.11.0/mdb.min.js"
+		></script>
+
+
+		<title> Computer Vision for Fashion </title>
+		
+		<style>		
+			table {
+			margin: auto 25px;
+			width: 95%;
+			}
+			
+			tbody {
+			width: 100%;
+			}
+
+			td {
+			height: 350px; 
+			vertical-align: middle; 
+			text-align: center;
+			}
+		</style>
+	
+	</head>
+ 
+	<body>
+
+		<div class="progress progress-striped active">
+			<div class="progress-bar progress-bar-success"
+				style="width: 0%">
+			</div>
+		</div>
+
+		<div style="padding: 25px;">
+		
+			<div style="text-align: center; margin-bottom: 20px;">
+				<img id="display" src="./" alt="your image" style="display: none;">
+				<canvas id="myCanvas" width="0" height="0"></canvas>
+			</div>
+
+			<div style="text-align: center;">
+				<div id="json" style="display: none; margin: 0 auto;"></div>
+			</div>
+
+			<div id="insert-img">
+				<div style="text-align: center; margin-bottom: 20px;">
+					<input type="file" accept="image/*" id="file-input" style="margin-left: auto; margin-right: auto;">
+				</div>
+				
+				<div id="target">
+					<table style="border: 1px solid black;">
+						<tbody>
+							<tr>
+								<td>You can drag an image file here</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+		</div>
+	
+
+		<script>
+			var base64String;
+			var result;
+			
+			function renderResult(result) {
+				console.log(typeof(result));
+				console.log(result);
+				const json = JSON.parse(result);
+				console.log(typeof(json));
+				console.log(json);
+				
+
+				arr = json.outputs[0].data.regions;
+				console.log(arr.length);
+
+				var arr2 = [];
+
+				var c = document.getElementById("myCanvas");
+				var img = document.getElementById("display");
+				c.width = img.width;
+				c.height = img.height;
+				var ctx = c.getContext("2d");
+				ctx.drawImage(img, 0, 0, img.width, img.height);
+
+
+				var canvas = document.getElementById("myCanvas");
+				var context = canvas.getContext("2d");
+
+				context.beginPath();
+				
+
+				async function product(q) {
+					console.log(q);
+					
+					const requestOptions = {
+						method: 'GET',
+						headers: {
+							'Accept': 'application/json',
+							'Authorization': 'Key 3eb3c5a0323de00a1ebd94168ac9123c09c4ae308a8751b69e7e6c8a275c8df7',
+							'q': q
+						}					
+					};
+
+					result = await fetch("https://serpapi.com/search", requestOptions)
+					.then(response => console.log(response.text()));
+				}
+
+
+				for (let i=0; i<arr.length; i++) {
+					console.log("%s, %s", arr[i].data.concepts[0].name, arr[i].data.concepts[0].value);
+					
+					//console.log(typeof(arr[i].data.concepts[0].value));
+					if (typeof(arr[i].data.concepts[0].value) == "number") {
+						if (arr[i].data.concepts[0].value > 0.6) {
+
+							if (arr2.includes(arr[i].data.concepts[0].name) == false) {
+								const para = document.createElement("b");
+								//const node = document.createTextNode(arr[i].data.concepts[0].name + ", " + arr[i].data.concepts[0].value);
+								const node = document.createTextNode(arr[i].data.concepts[0].name);
+								para.appendChild(node);
+								para.className = "pb-2";
+
+								const para3 = document.createElement("figure");
+								para3.appendChild(para);
+								para3.className = "note note-primary p-4";
+								
+								document.getElementById("json").appendChild(para3);
+
+								arr2.push(arr[i].data.concepts[0].name);
+
+								bounding_box = arr[i].region_info.bounding_box;
+								context.rect(bounding_box.left_col * c.width, bounding_box.top_row * c.height, (bounding_box.right_col - bounding_box.left_col) * c.width, (bounding_box.bottom_row - bounding_box.top_row) * c.height);
+
+								/*
+								console.log("https://serpapi.com/search.json?api_key=3eb3c5a0323de00a1ebd94168ac9123c09c4ae308a8751b69e7e6c8a275c8df7&q=" + arr[i].data.concepts[0].name);
+								fetch("https://serpapi.com/search.json?api_key=3eb3c5a0323de00a1ebd94168ac9123c09c4ae308a8751b69e7e6c8a275c8df7&q=" + arr[i].data.concepts[0].name)
+								.then(res => console.log(res.text()));
+								*/
+
+								product(arr[i].data.concepts[0].name);
+
+							}
+							else {
+								console.log(arr[i].data.concepts[0].name + " appeared before!");
+							}
+							
+						}
+						else {
+							console.log(arr[i].data.concepts[0].name + " contains a probability lower than 0.6");
+						}
+					}
+					else {
+						console.log(arr[i].data.concepts[0].name + " does not have a number probability");
+					}
+
+				}
+
+				
+				document.getElementById("json").style.width = document.getElementById("display").offsetWidth;
+				
+				const br = document.createElement("br");
+				document.getElementById("json").appendChild(br);
+				
+				$('#json').css('display', 'block');
+				
+				
+				/*
+				bounding_box = arr[0].region_info.bounding_box;
+				
+				console.log("Top: %s", bounding_box.top_row);
+				console.log("Bottom: %s", bounding_box.bottom_row);
+				console.log("Left: %s", bounding_box.left_col);
+				console.log("Right: %s", bounding_box.right_col);
+				*/
+				
+				context.lineWidth = 2;
+				context.strokeStyle = "#83f52c";
+				context.stroke();
+
+				img.style.display = "none";
+
+				var insert_img = document.getElementById("insert-img");
+				insert_img.style.display = "none";
+				
+			}
+			
+			
+			async function predict(base64String) {
+				
+				console.log(base64String);
+				
+				const raw = JSON.stringify({
+				"user_app_id": {
+						"user_id": "9z5stam74mgd",
+						"app_id": "171f5c6d87884ea89962f748e4a01f44"
+					},
+				"inputs": [
+					{
+					"data": {
+						"image": {
+						"base64": base64String
+						}
+					}
+					}
+				]
+				});
+				
+				const requestOptions = {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Authorization': 'Key a23d040e537046dfa64f8c5468f19e73'
+					},
+					body: raw
+				};
+				
+
+				// NOTE: MODEL_VERSION_ID is optional, you can also call prediction with the MODEL_ID only
+				// https://api.clarifai.com/v2/models/{YOUR_MODEL_ID}/outputs
+				// this will default to the latest version_id
+
+				$(".progress-bar").animate({
+					width: "80%",
+				}, 900);
+
+				result = await fetch("https://api.clarifai.com/v2/models/72c523807f93e18b431676fb9a58e6ad/outputs", requestOptions)
+				.then(response => response.text())
+				.then(result => renderResult(result))
+				.catch(error => console.log('error', error));
+
+				$(".progress-bar").animate({
+					width: "100%",
+				}, 100);
+
+			}
+			
+			
+			function readURL(files) {
+			
+				$('#json').empty();
+				
+				console.log("Upload file succeed 1");
+				
+				var reader = new FileReader();
+				reader.onload = function (e) {
+					$('#display').attr('src', e.target.result);
+					$('#display').css('display', 'inline-block');
+					$('#display').css('width', '300px');
+					
+					try {
+						base64String = reader.result.replace("data:", "")
+							.replace(/^.+,/, "");
+					}
+					catch(err) {
+						console.log(err);
+					}
+					finally {
+						return predict(base64String);
+					}
+				};
+				
+				reader.readAsDataURL(files[0]);
+
+			}
+			
+			
+			const fileInput = document.getElementById('file-input');
+			fileInput.addEventListener('change', (e) => readURL(e.target.files));
+			
+			
+			const target = document.getElementById('target');
+
+			target.addEventListener('drop', (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+
+				readURL(e.dataTransfer.files);
+			});
+
+			target.addEventListener('dragover', (e) => {
+				e.stopPropagation();
+				e.preventDefault();
+
+				e.dataTransfer.dropEffect = 'copy';
+			});
+		
+		</script>
+
+	</body>
+</html>
